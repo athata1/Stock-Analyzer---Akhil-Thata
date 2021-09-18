@@ -59,17 +59,19 @@ public class StockAnalyzer extends JPanel {
         Matcher matcher;
 
         Scanner scan = new Scanner(System.in);
-        System.out.print("Enter Ticker:");
+        System.out.print("Enter Ticker: ");
         String date;
         ticker = scan.nextLine().toUpperCase();
 
         //Get date1
         do {
-            System.out.println("\nEnter start date of values (mm/dd/yyyy)");
+            System.out.print("Enter start date of values (mm/dd/yyyy): ");
             date = scan.nextLine();
             matcher = pattern.matcher(date);
         }
         while(!matcher.matches());
+
+        //Get time in Milliseconds
         String[] dateData = date.split("/");
         Calendar c = Calendar.getInstance();
         c.set(Calendar.MONTH, Integer.parseInt(dateData[0]));
@@ -79,7 +81,7 @@ public class StockAnalyzer extends JPanel {
 
         do
         {
-            System.out.println("Set Mode: regular, log, or gradient");
+            System.out.print("Set mode (regular, log, or gradient): ");
             mode = scan.nextLine().toLowerCase();
         }
         while (!mode.equals("regular") && !mode.equals("log") && !mode.equals("gradient"));

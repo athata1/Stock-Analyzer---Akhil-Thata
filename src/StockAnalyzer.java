@@ -14,7 +14,7 @@ public class StockAnalyzer extends JPanel {
     
     private String stockURL;
     private String ticker;
-    private long time2;
+    private final long time2;
     private long time1;
     private BufferedReader reader;
     private ArrayList<Data> data;
@@ -40,7 +40,7 @@ public class StockAnalyzer extends JPanel {
         //Create Data files
         data = new ArrayList<Data>();
         try{
-            String s = "";
+            String s;
             while ((s=reader.readLine()) != null)
             {
                 data.add(new Data(s.split(","),mode));
@@ -223,31 +223,18 @@ public class StockAnalyzer extends JPanel {
         double rX = r2D.getX();
         double rY = r2D.getY();
 
-        int a = (int)Math.round((1.0 * width / 2) - (1.0 * rWidth / 2) - rX);
-        int c = (int)Math.round((1.0 * height / 2) - (1.0 * rHeight / 2) - rY);
+        int a = (int)Math.round((1.0 * width / 2) - (rWidth / 2) - rX);
+        int c = (int)Math.round((1.0 * height / 2) - (rHeight / 2) - rY);
         g.drawString(s, x + a, y + c);
     }
     public int getDaysInMonth(int month)
     {
-        switch(month)
-        {
-            case 1:
-            case 12:
-            case 10:
-            case 8:
-            case 7:
-            case 5:
-            case 3:
-                return 31;
-            case 2:
-                return 29;
-            case 4:
-            case 11:
-            case 9:
-            case 6:
-                return 30;
-        }
-        return -1;
+        return switch (month) {
+            case 1, 12, 10, 8, 7, 5, 3 -> 31;
+            case 2 -> 29;
+            case 4, 11, 9, 6 -> 30;
+            default -> -1;
+        };
     }
     public void fillCircle(int x,int y,int radius, Graphics g)
     {

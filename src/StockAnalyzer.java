@@ -109,7 +109,11 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         {
             System.out.println("Error while reading data");
         }
-        ratio = 400.0/Data.maxCloseValue;
+        if (Data.maxCloseValue != 0) {
+            ratio = 400.0 / Data.maxCloseValue;
+        }
+        else
+            ratio = 1;
         yearMap = new TreeMap<Integer,Color>();
     }
     public void getValues()

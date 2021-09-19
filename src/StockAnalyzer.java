@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.font.*;
@@ -22,30 +24,54 @@ public class StockAnalyzer extends JPanel implements KeyListener {
     private double ratio;
     private TreeMap<Integer,Color> yearMap;
     private String mode;
+    String date;
+    JFrame frame;
     public StockAnalyzer()
     {
         addKeyListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(true);
         getValues();
+
+        //Create command frame
+        JFrame f=new JFrame("Commands");
+        JButton b1=new JButton("Regular");
+        JButton b2=new JButton("Log");
+        JButton b3=new JButton("Gradiant");
+        b1.setBounds(50,50,95,30);
+        b2.setBounds(50,100,95,30);
+        b3.setBounds(50,150,95,30);
+        b1.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                mode = "regular";
+                getData(date,ticker);
+                repaint();
+            }
+        });
+        b2.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                mode = "log";
+                getData(date,ticker);
+                repaint();
+            }
+        });
+        b3.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e){
+                mode = "gradient";
+                repaint();
+            }
+        });
+        f.add(b1);
+        f.add(b2);
+        f.add(b3);
+        f.setSize(200,250);
+        f.setLayout(null);
+        f.setVisible(true);
+
+
     }
-    public void getValues()
+    public void getData(String date, String ticker)
     {
-        Pattern pattern = Pattern.compile("(0[0-9]||1[0-2])/([0-2][0-9]||3[0-1])/((19|20)\\d\\d)");
-        Matcher matcher;
-
-        Scanner scan = new Scanner(System.in);
-        System.out.print("Enter Ticker: ");
-        String date;
-        ticker = scan.nextLine().toUpperCase();
-
-        //Get date1
-        do {
-            System.out.print("Enter start date of values (mm/dd/yyyy): ");
-            date = scan.nextLine();
-            matcher = pattern.matcher(date);
-        }
-        while(!matcher.matches());
 
         //Get time in Milliseconds
         String[] dateData = date.split("/");
@@ -54,13 +80,6 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         c.set(Calendar.YEAR, Integer.parseInt(dateData[2]));
         c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateData[1]));
         time1 = c.getTimeInMillis()/1000;
-
-        do
-        {
-            System.out.print("Set mode (regular, log, or gradient): ");
-            mode = scan.nextLine().toLowerCase();
-        }
-        while (!mode.equals("regular") && !mode.equals("log") && !mode.equals("gradient"));
 
         time2 = System.currentTimeMillis();
 
@@ -92,6 +111,25 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         }
         ratio = 400.0/Data.maxCloseValue;
         yearMap = new TreeMap<Integer,Color>();
+    }
+    public void getValues()
+    {
+        Scanner scan = new Scanner(System.in);
+        mode = "regular";
+        System.out.print("Enter Ticker: ");
+        ticker = scan.nextLine().toUpperCase();
+
+        Pattern pattern = Pattern.compile("(0[0-9]||1[0-2])/([0-2][0-9]||3[0-1])/((19|20)\\d\\d)");
+        Matcher matcher;
+        //Get date1
+        do {
+            System.out.print("Enter start date of values (mm/dd/yyyy): ");
+            date = scan.nextLine();
+            matcher = pattern.matcher(date);
+        }
+        while(!matcher.matches());
+
+        getData(date,ticker);
     }
     @Override
     public void paint(Graphics g)
@@ -260,6 +298,12 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         jf.setVisible(true);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.add(t);
+        jf.pack();
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(800, 700);
     }
 
     @Override

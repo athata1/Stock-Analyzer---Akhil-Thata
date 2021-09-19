@@ -1,20 +1,21 @@
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.font.*;
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+import javax.swing.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StockAnalyzer extends JPanel {
+public class StockAnalyzer extends JPanel implements KeyListener {
     
     private String stockURL;
     private String ticker;
-    private final long time2;
+    private long time2;
     private long time1;
     private BufferedReader reader;
     private ArrayList<Data> data;
@@ -23,35 +24,10 @@ public class StockAnalyzer extends JPanel {
     private String mode;
     public StockAnalyzer()
     {
+        addKeyListener(this);
+        setFocusable(true);
+        setFocusTraversalKeysEnabled(true);
         getValues();
-        time2 = System.currentTimeMillis();
-        //Load Stock Data
-        stockURL = "https://query1.finance.yahoo.com/v7/finance/download/" + ticker + "?period1=" + time1 + "&period2=" + time2 + "&interval=1d&events=history&includeAdjustedClose=true";
-        try {
-            URL url = new URL(stockURL);
-            reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            reader.readLine();
-        }
-        catch(Exception e)
-        {
-            System.out.println("Could not load data");
-        }
-
-        //Create Data files
-        data = new ArrayList<Data>();
-        try{
-            String s;
-            while ((s=reader.readLine()) != null)
-            {
-                data.add(new Data(s.split(","),mode));
-            }
-        }
-        catch (Exception e)
-        {
-            System.out.println("Error while reading data");
-        }
-        ratio = 400.0/Data.maxCloseValue;
-        yearMap = new TreeMap<Integer,Color>();
     }
     public void getValues()
     {
@@ -85,11 +61,42 @@ public class StockAnalyzer extends JPanel {
             mode = scan.nextLine().toLowerCase();
         }
         while (!mode.equals("regular") && !mode.equals("log") && !mode.equals("gradient"));
+
+        time2 = System.currentTimeMillis();
+
+        Data.maxCloseValue = 0;
+        //Load Stock Data
+        stockURL = "https://query1.finance.yahoo.com/v7/finance/download/" + ticker + "?period1=" + time1 + "&period2=" + time2 + "&interval=1d&events=history&includeAdjustedClose=true";
+        try {
+            URL url = new URL(stockURL);
+            reader = new BufferedReader(new InputStreamReader(url.openStream()));
+            reader.readLine();
+        }
+        catch(Exception e)
+        {
+            System.out.println("Could not load data");
+        }
+
+        //Create Data files
+        data = new ArrayList<Data>();
+        try{
+            String s;
+            while ((s=reader.readLine()) != null)
+            {
+                data.add(new Data(s.split(","),mode));
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error while reading data");
+        }
+        ratio = 400.0/Data.maxCloseValue;
+        yearMap = new TreeMap<Integer,Color>();
     }
     @Override
-    public void paintComponent(Graphics g)
+    public void paint(Graphics g)
     {
-        super.paintComponent(g);
+        super.paint(g);
 
         //Draw Graph
         g.translate(200,500);
@@ -253,5 +260,25 @@ public class StockAnalyzer extends JPanel {
         jf.setVisible(true);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.add(t);
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        String s = e.getKeyChar() + "";
+        if (s.equals("r"))
+        {
+            getValues();
+            repaint();
+        }
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 }

@@ -38,9 +38,35 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         JButton b1=new JButton("Regular");
         JButton b2=new JButton("Log");
         JButton b3=new JButton("Gradiant");
+        JTextField text = new JTextField("Enter Ticker Here");
+        text.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ticker = text.getText();
+                getData(date,ticker);
+                repaint();
+            }
+        });
+        JTextField dateText = new JTextField("Enter Start Date Here");
+        dateText.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Pattern pattern = Pattern.compile("(0[0-9]||1[0-2])/([0-2][0-9]||3[0-1])/((19|20)\\d\\d)");
+                Matcher matcher = pattern.matcher(dateText.getText());
+                //Get date1
+                if (matcher.matches())
+                {
+                    date = dateText.getText();
+                    getData(date,ticker);
+                    repaint();
+                }
+            }
+        });
+        text.setBounds(50,200, 95,30);
         b1.setBounds(50,50,95,30);
         b2.setBounds(50,100,95,30);
         b3.setBounds(50,150,95,30);
+        dateText.setBounds(50,250,95,30);
         b1.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 mode = "regular";
@@ -64,23 +90,26 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         f.add(b1);
         f.add(b2);
         f.add(b3);
-        f.setSize(200,250);
+        f.add(text);
+        f.add(dateText);
+        f.setSize(200,400);
         f.setLayout(null);
         f.setVisible(true);
-
-
     }
     public void getData(String date, String ticker)
     {
 
         //Get time in Milliseconds
-        String[] dateData = date.split("/");
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.MONTH, Integer.parseInt(dateData[0]));
-        c.set(Calendar.YEAR, Integer.parseInt(dateData[2]));
-        c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateData[1]));
-        time1 = c.getTimeInMillis()/1000;
-
+        if (date != null) {
+            String[] dateData = date.split("/");
+            Calendar c = Calendar.getInstance();
+            c.set(Calendar.MONTH, Integer.parseInt(dateData[0]));
+            c.set(Calendar.YEAR, Integer.parseInt(dateData[2]));
+            c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateData[1]));
+            time1 = c.getTimeInMillis() / 1000;
+        }
+        else
+            time1 = System.currentTimeMillis() - 365*24*60*60*1000;
         time2 = System.currentTimeMillis();
 
         Data.maxCloseValue = 0;
@@ -93,7 +122,6 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         }
         catch(Exception e)
         {
-            System.out.println("Could not load data");
         }
 
         //Create Data files
@@ -107,7 +135,6 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         }
         catch (Exception e)
         {
-            System.out.println("Error while reading data");
         }
         if (Data.maxCloseValue != 0) {
             ratio = 400.0 / Data.maxCloseValue;
@@ -120,19 +147,7 @@ public class StockAnalyzer extends JPanel implements KeyListener {
     {
         Scanner scan = new Scanner(System.in);
         mode = "regular";
-        System.out.print("Enter Ticker: ");
-        ticker = scan.nextLine().toUpperCase();
-
-        Pattern pattern = Pattern.compile("(0[0-9]||1[0-2])/([0-2][0-9]||3[0-1])/((19|20)\\d\\d)");
-        Matcher matcher;
-        //Get date1
-        do {
-            System.out.print("Enter start date of values (mm/dd/yyyy): ");
-            date = scan.nextLine();
-            matcher = pattern.matcher(date);
-        }
-        while(!matcher.matches());
-
+        ticker = "";
         getData(date,ticker);
     }
     @Override

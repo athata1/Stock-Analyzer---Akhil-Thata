@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StockAnalyzer extends JPanel implements KeyListener {
+public class StockAnalyzer extends JPanel {
     
     private String stockURL;
     private String ticker;
@@ -28,9 +28,6 @@ public class StockAnalyzer extends JPanel implements KeyListener {
     JFrame frame;
     public StockAnalyzer()
     {
-        addKeyListener(this);
-        setFocusable(true);
-        setFocusTraversalKeysEnabled(true);
         getValues();
 
         //Create command frame
@@ -103,7 +100,7 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         if (date != null) {
             String[] dateData = date.split("/");
             Calendar c = Calendar.getInstance();
-            c.set(Calendar.MONTH, Integer.parseInt(dateData[0]));
+            c.set(Calendar.MONTH, Integer.parseInt(dateData[0])-1);
             c.set(Calendar.YEAR, Integer.parseInt(dateData[2]));
             c.set(Calendar.DAY_OF_MONTH, Integer.parseInt(dateData[1]));
             time1 = c.getTimeInMillis() / 1000;
@@ -112,8 +109,8 @@ public class StockAnalyzer extends JPanel implements KeyListener {
             time1 = System.currentTimeMillis() - 365*24*60*60*1000;
         time2 = System.currentTimeMillis();
 
-        Data.maxCloseValue = 0;
         //Load Stock Data
+        Data.maxCloseValue = 0;
         stockURL = "https://query1.finance.yahoo.com/v7/finance/download/" + ticker + "?period1=" + time1 + "&period2=" + time2 + "&interval=1d&events=history&includeAdjustedClose=true";
         try {
             URL url = new URL(stockURL);
@@ -148,12 +145,13 @@ public class StockAnalyzer extends JPanel implements KeyListener {
         Scanner scan = new Scanner(System.in);
         mode = "regular";
         ticker = "";
-        getData(date,ticker);
+        data = new ArrayList<Data>();
+        yearMap = new TreeMap<Integer,Color>();
     }
     @Override
-    public void paint(Graphics g)
+    public void paintComponent(Graphics g)
     {
-        super.paint(g);
+        super.paintComponent(g);
 
         //Draw Graph
         g.translate(200,500);
@@ -323,25 +321,5 @@ public class StockAnalyzer extends JPanel implements KeyListener {
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(800, 700);
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-        String s = e.getKeyChar() + "";
-        if (s.equals("r"))
-        {
-            getValues();
-            repaint();
-        }
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-
     }
 }

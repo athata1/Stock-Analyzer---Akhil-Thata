@@ -1,8 +1,6 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.font.*;
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
@@ -25,7 +23,6 @@ public class StockAnalyzer extends JPanel {
     private TreeMap<Integer,Color> yearMap;
     private String mode;
     String date;
-    JFrame frame;
     public StockAnalyzer()
     {
         getValues();
@@ -48,7 +45,7 @@ public class StockAnalyzer extends JPanel {
         dateText.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Pattern pattern = Pattern.compile("(0[0-9]||1[0-2])/([0-2][0-9]||3[0-1])/((19|20)\\d\\d)");
+                Pattern pattern = Pattern.compile("([0]?[0-9]||1[0-2])/([0]?[0-9]||[1-2][0-9]||3[0-1])/((19|20)\\d\\d)");
                 Matcher matcher = pattern.matcher(dateText.getText());
                 //Get date1
                 if (matcher.matches())
@@ -81,6 +78,7 @@ public class StockAnalyzer extends JPanel {
         b3.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 mode = "gradient";
+                getData(date,ticker);
                 repaint();
             }
         });
@@ -95,7 +93,6 @@ public class StockAnalyzer extends JPanel {
     }
     public void getData(String date, String ticker)
     {
-
         //Get time in Milliseconds
         if (date != null) {
             String[] dateData = date.split("/");
@@ -138,11 +135,13 @@ public class StockAnalyzer extends JPanel {
         }
         else
             ratio = 1;
+        try {
+            reader.close();
+        } catch(Exception e){}
         yearMap = new TreeMap<Integer,Color>();
     }
     public void getValues()
     {
-        Scanner scan = new Scanner(System.in);
         mode = "regular";
         ticker = "";
         data = new ArrayList<Data>();
@@ -156,11 +155,11 @@ public class StockAnalyzer extends JPanel {
         //Draw Graph
         g.translate(200,500);
         g.drawLine(0,0,0,-400);
-        g.drawLine(0,0,35*12,0);
+        g.drawLine(0,0,31*12,0);
 
         //Draw Title
         Font font = new Font("Courier New", Font.BOLD, 30);
-        centerText(0,-500,font,35*12,100,ticker + " Data",g);
+        centerText(0,-500,font,31*12,100,ticker + " Data",g);
 
         //Label X axis
         font = new Font("Courier New", Font.BOLD, 15);
@@ -169,13 +168,13 @@ public class StockAnalyzer extends JPanel {
         String[] months = {"J","F","M","A","M","J","J","A","S","O","N","D"};
         for (int i = 0; i < 12; i++)
         {
-            g.drawLine(35*i, -5,35*i,5);
-            g.drawString(months[i], 35*i-6, 20);
+            g.drawLine(31*i, -5,31*i,5);
+            g.drawString(months[i], 31*i-6, 20);
         }
 
         //Center X axis label
         font = new Font("Courier New", Font.BOLD, 30);
-        centerText(0,0,font,35*12,100,"Date",g);
+        centerText(0,0,font,31*12,100,"Date",g);
 
         //Label Y axis
         g.setFont(new Font("Courier New", Font.BOLD, 15));
@@ -202,7 +201,7 @@ public class StockAnalyzer extends JPanel {
                 int day = d.getDay();
                 int month = d.getMonth();
                 int year = d.getYear();
-                int xCoord = (int) Math.round((month - 1) * 35 + 1.0 * day / getDaysInMonth(month) * 35);
+                int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
                 int yCoord = (int) Math.round(-d.getCloseVal() * ratio);
                 fillCircle(xCoord, yCoord, 1, g);
                 //Change color of line
@@ -220,20 +219,20 @@ public class StockAnalyzer extends JPanel {
 
             //Draw Key
             g.setColor(Color.BLACK);
-            g.drawString("Key:", 35 * 12 + 50, -375);
+            g.drawString("Key:", 31 * 12 + 50, -375);
             g.setFont(new Font("Courier New", Font.BOLD, 15));
             int i = 0;
             for (Map.Entry<Integer, Color> entry : yearMap.entrySet()) {
                 int key = entry.getKey();
                 Color c = entry.getValue();
                 g.setColor(c);
-                g.fillRect(35 * 12 + 50, -350 + 25 * i, 15, 15);
-                g.drawString(key + "", 35 * 12 + 70, -335 + 25 * i);
+                g.fillRect(31 * 12 + 50, -350 + 25 * i, 15, 15);
+                g.drawString(key + "", 31 * 12 + 70, -335 + 25 * i);
                 i++;
             }
 
             g.setColor(Color.BLACK);
-            g.drawRect(35 * 12 + 40, -400, 100, i * 25 + 50);
+            g.drawRect(31 * 12 + 40, -400, 100, i * 25 + 50);
         }
         else
         {
@@ -244,7 +243,7 @@ public class StockAnalyzer extends JPanel {
             for (Data d : data) {
                 int day = d.getDay();
                 int month = d.getMonth();
-                int xCoord = (int) Math.round((month - 1) * 35 + 1.0 * day / getDaysInMonth(month) * 35);
+                int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
                 int yCoord = (int) Math.round(-d.getCloseVal() * ratio);
 
                 if (prevX != -1)
@@ -272,7 +271,7 @@ public class StockAnalyzer extends JPanel {
                 g.setColor(new Color((int)((1-1.0*numerator/denominator)*255),(int)(1.0*numerator/denominator*255),0));
                 int day = Integer.parseInt(date[1]);
                 int month = Integer.parseInt(date[0]);
-                int xCoord = (int) Math.round((month - 1) * 35 + 1.0 * day / getDaysInMonth(month) * 35);
+                int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
                 g.drawLine(xCoord,0,xCoord,-400);
             }
         }
@@ -311,6 +310,7 @@ public class StockAnalyzer extends JPanel {
         JFrame jf = new JFrame();
         jf.setTitle("StockAnalyzer");
         jf.setSize(800,700);
+        jf.setLocation(200,0);
         t.setBackground(Color.WHITE);
         jf.setVisible(true);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

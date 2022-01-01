@@ -64,21 +64,18 @@ public class StockAnalyzer extends JPanel {
         b1.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 mode = "regular";
-                getData(date,ticker);
                 repaint();
             }
         });
         b2.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 mode = "log";
-                getData(date,ticker);
                 repaint();
             }
         });
         b3.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e){
                 mode = "gradient";
-                getData(date,ticker);
                 repaint();
             }
         });
@@ -103,7 +100,10 @@ public class StockAnalyzer extends JPanel {
             time1 = c.getTimeInMillis() / 1000;
         }
         else
-            time1 = System.currentTimeMillis() - 365*24*60*60*1000;
+        {
+            return;
+        }
+
         time2 = System.currentTimeMillis();
 
         //Load Stock Data
@@ -124,7 +124,7 @@ public class StockAnalyzer extends JPanel {
             String s;
             while ((s=reader.readLine()) != null)
             {
-                data.add(new Data(s.split(","),mode));
+                data.add(new Data(s.split(",")));
             }
         }
         catch (Exception e)
@@ -147,11 +147,9 @@ public class StockAnalyzer extends JPanel {
         data = new ArrayList<Data>();
         yearMap = new TreeMap<Integer,Color>();
     }
-    @Override
-    public void paintComponent(Graphics g)
-    {
-        super.paintComponent(g);
 
+    public void loadGraph(Graphics g)
+    {
         //Draw Graph
         g.translate(200,500);
         g.drawLine(0,0,0,-400);
@@ -176,6 +174,11 @@ public class StockAnalyzer extends JPanel {
         font = new Font("Courier New", Font.BOLD, 30);
         centerText(0,0,font,31*12,100,"Date",g);
 
+    }
+
+    public void gradientData(Graphics g)
+    {
+
         //Label Y axis
         g.setFont(new Font("Courier New", Font.BOLD, 15));
         for (int i = 0; i <= 10; i++)
@@ -193,87 +196,193 @@ public class StockAnalyzer extends JPanel {
             g.drawString(yAxisName.substring(i,i+1),-150,-350 + 29*i);
         }
 
-        if (!mode.equals("gradient")) {
-            //Display close values
-            int prevX = -1;
-            int prevY = -1;
-            for (Data d : data) {
-                int day = d.getDay();
-                int month = d.getMonth();
-                int year = d.getYear();
-                int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
-                int yCoord = (int) Math.round(-d.getCloseVal() * ratio);
-                fillCircle(xCoord, yCoord, 1, g);
-                //Change color of line
-                if (yearMap.containsKey(year))
-                    g.setColor(yearMap.get(year));
-                else
-                    yearMap.put(year, new Color((int) (Math.random() * 240), (int) (Math.random() * 240), (int) (Math.random() * 240)));
+        TreeMap<String,String> map = new TreeMap<String,String>();
+        int prevX = -1;
+        int prevY = -1;
+        double slope = -1;
+        for (Data d : data) {
+            int day = d.getDay();
+            int month = d.getMonth();
+            int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
+            int yCoord = (int) Math.round(-d.getCloseVal() * 400.0 / Data.maxCloseValue);
 
-                if (prevX != -1 && Math.abs(prevX - xCoord) <= 5) {
-                    g.drawLine(prevX, prevY, xCoord, yCoord);
+            if (prevX != -1)
+            {
+                slope = 1.0*(yCoord - prevY) / (1.0 * xCoord - prevX);
+                char ch = (slope >= 0) ? 'p' : 'n';
+                if (map.containsKey(month + "/" + day))
+                {
+                    String s = map.get(month + "/" + day);
+                    map.put(month + "/" + day, s + ch);
                 }
-                prevX = xCoord;
-                prevY = yCoord;
+                else
+                    map.put(month + "/" + day,ch + "");
             }
 
-            //Draw Key
-            g.setColor(Color.BLACK);
-            g.drawString("Key:", 31 * 12 + 50, -375);
-            g.setFont(new Font("Courier New", Font.BOLD, 15));
-            int i = 0;
-            for (Map.Entry<Integer, Color> entry : yearMap.entrySet()) {
-                int key = entry.getKey();
-                Color c = entry.getValue();
-                g.setColor(c);
-                g.fillRect(31 * 12 + 50, -350 + 25 * i, 15, 15);
-                g.drawString(key + "", 31 * 12 + 70, -335 + 25 * i);
-                i++;
-            }
+            prevX = xCoord;
+            prevY = yCoord;
+        }
+        for (Map.Entry<String,String> entry: map.entrySet())
+        {
+            String str = entry.getValue();
+            int denominator = str.length();
+            int numerator = denominator - str.replaceAll("p","").length();
+            String[] date = entry.getKey().split("/");
+            g.setColor(new Color((int)((1-1.0*numerator/denominator)*255),(int)(1.0*numerator/denominator*255),0));
+            int day = Integer.parseInt(date[1]);
+            int month = Integer.parseInt(date[0]);
+            int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
+            g.drawLine(xCoord,0,xCoord,-400);
+        }
+    }
 
-            g.setColor(Color.BLACK);
-            g.drawRect(31 * 12 + 40, -400, 100, i * 25 + 50);
+    public void regularData(Graphics g)
+    {
+
+        //Label Y axis
+        g.setFont(new Font("Courier New", Font.BOLD, 15));
+        for (int i = 0; i <= 10; i++)
+        {
+            g.drawLine(-5,-40*i,5,-40*i);
+            double yValue = 1.0*Math.round(40.0*i/400*Data.maxCloseValue*100)/100;
+            String value = "$" + String.format("%.2f",yValue);
+            value = String.format("%9s",value);
+            g.drawString(value,-100,-40*i+5);
+        }
+        String yAxisName = "Close Values";
+        g.setFont(new Font("Courier New", Font.BOLD, 30));
+        for (int i = 0; i < yAxisName.length(); i++)
+        {
+            g.drawString(yAxisName.substring(i,i+1),-150,-350 + 29*i);
+        }
+
+        //Display close values
+        int prevX = -1;
+        int prevY = -1;
+        for (Data d : data)
+        {
+            int day = d.getDay();
+            int month = d.getMonth();
+            int year = d.getYear();
+            int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
+            int yCoord = (int) Math.round(-d.getCloseVal() * 400.0 / Data.maxCloseValue);
+            fillCircle(xCoord, yCoord, 1, g);
+            //Change color of line
+            if (yearMap.containsKey(year))
+                g.setColor(yearMap.get(year));
+            else
+                yearMap.put(year, new Color((int) (Math.random() * 240), (int) (Math.random() * 240), (int) (Math.random() * 240)));
+
+            if (prevX != -1 && Math.abs(prevX - xCoord) <= 5) {
+                g.drawLine(prevX, prevY, xCoord, yCoord);
+            }
+            prevX = xCoord;
+            prevY = yCoord;
+        }
+
+        //Draw Key
+        g.setColor(Color.BLACK);
+        g.drawString("Key:", 31 * 12 + 50, -375);
+        g.setFont(new Font("Courier New", Font.BOLD, 15));
+        int i = 0;
+        for (Map.Entry<Integer, Color> entry : yearMap.entrySet()) {
+            int key = entry.getKey();
+            Color c = entry.getValue();
+            g.setColor(c);
+            g.fillRect(31 * 12 + 50, -350 + 25 * i, 15, 15);
+            g.drawString(key + "", 31 * 12 + 70, -335 + 25 * i);
+            i++;
+        }
+
+        g.setColor(Color.BLACK);
+        g.drawRect(31 * 12 + 40, -400, 100, i * 25 + 50);
+    }
+
+    public void logData(Graphics g)
+    {
+
+
+        //Label Y axis
+        g.setFont(new Font("Courier New", Font.BOLD, 15));
+        for (int i = 0; i <= 10; i++)
+        {
+            g.drawLine(-5,-40*i,5,-40*i);
+            double yValue = 1.0*Math.round(40.0*i/400*Math.log(Data.maxCloseValue)*100)/100;
+            String value = "$" + String.format("%.2f",yValue);
+            value = String.format("%9s",value);
+            g.drawString(value,-100,-40*i+5);
+        }
+        String yAxisName = "Close Values";
+        g.setFont(new Font("Courier New", Font.BOLD, 30));
+        for (int i = 0; i < yAxisName.length(); i++)
+        {
+            g.drawString(yAxisName.substring(i,i+1),-150,-350 + 29*i);
+        }
+
+        //Display close values
+        int prevX = -1;
+        int prevY = -1;
+
+
+        double maxClose = Math.log(Data.maxCloseValue);
+        for (Data d : data)
+        {
+            int day = d.getDay();
+            int month = d.getMonth();
+            int year = d.getYear();
+            int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
+            int yCoord = (int) -Math.round(Math.log(d.getCloseVal()) * 400.0 / maxClose);
+
+            fillCircle(xCoord, yCoord, 1, g);
+            //Change color of line
+            if (yearMap.containsKey(year))
+                g.setColor(yearMap.get(year));
+            else
+                yearMap.put(year, new Color((int) (Math.random() * 240), (int) (Math.random() * 240), (int) (Math.random() * 240)));
+
+            if (prevX != -1 && Math.abs(prevX - xCoord) <= 5) {
+                g.drawLine(prevX, prevY, xCoord, yCoord);
+            }
+            prevX = xCoord;
+            prevY = yCoord;
+        }
+
+        //Draw Key
+        g.setColor(Color.BLACK);
+        g.drawString("Key:", 31 * 12 + 50, -375);
+        g.setFont(new Font("Courier New", Font.BOLD, 15));
+        int i = 0;
+        for (Map.Entry<Integer, Color> entry : yearMap.entrySet()) {
+            int key = entry.getKey();
+            Color c = entry.getValue();
+            g.setColor(c);
+            g.fillRect(31 * 12 + 50, -350 + 25 * i, 15, 15);
+            g.drawString(key + "", 31 * 12 + 70, -335 + 25 * i);
+            i++;
+        }
+
+        g.setColor(Color.BLACK);
+        g.drawRect(31 * 12 + 40, -400, 100, i * 25 + 50);
+    }
+
+    @Override
+    public void paintComponent(Graphics g)
+    {
+        super.paintComponent(g);
+
+        loadGraph(g);
+
+        if (mode.equals("regular"))
+        {
+            regularData(g);
+        }
+        else if (mode.equals("log"))
+        {
+            logData(g);
         }
         else
         {
-            TreeMap<String,String> map = new TreeMap<String,String>();
-            int prevX = -1;
-            int prevY = -1;
-            double slope = -1;
-            for (Data d : data) {
-                int day = d.getDay();
-                int month = d.getMonth();
-                int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
-                int yCoord = (int) Math.round(-d.getCloseVal() * ratio);
-
-                if (prevX != -1)
-                {
-                    slope = 1.0*(yCoord - prevY) / (1.0 * xCoord - prevX);
-                    char ch = (slope >= 0) ? 'p' : 'n';
-                    if (map.containsKey(month + "/" + day))
-                    {
-                        String s = map.get(month + "/" + day);
-                        map.put(month + "/" + day, s + ch);
-                    }
-                    else
-                        map.put(month + "/" + day,ch + "");
-                }
-
-                prevX = xCoord;
-                prevY = yCoord;
-            }
-            for (Map.Entry<String,String> entry: map.entrySet())
-            {
-                String str = entry.getValue();
-                int denominator = str.length();
-                int numerator = denominator - str.replaceAll("p","").length();
-                String[] date = entry.getKey().split("/");
-                g.setColor(new Color((int)((1-1.0*numerator/denominator)*255),(int)(1.0*numerator/denominator*255),0));
-                int day = Integer.parseInt(date[1]);
-                int month = Integer.parseInt(date[0]);
-                int xCoord = (int) Math.round((month - 1) * 31 + 1.0 * day / getDaysInMonth(month) * 31);
-                g.drawLine(xCoord,0,xCoord,-400);
-            }
+            gradientData(g);
         }
     }
     public void centerText(int x, int y, Font font, int width, int height, String s, Graphics g)

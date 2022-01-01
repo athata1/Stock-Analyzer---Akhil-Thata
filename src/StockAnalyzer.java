@@ -25,68 +25,8 @@ public class StockAnalyzer extends JPanel {
     String date;
     public StockAnalyzer()
     {
+        setPreferredSize(new Dimension(800,700));
         getValues();
-
-        //Create command frame
-        JFrame f=new JFrame("Commands");
-        JButton b1=new JButton("Regular");
-        JButton b2=new JButton("Log");
-        JButton b3=new JButton("Gradiant");
-        JTextField text = new JTextField("Enter Ticker Here");
-        text.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ticker = text.getText();
-                getData(date,ticker);
-                repaint();
-            }
-        });
-        JTextField dateText = new JTextField("Enter Start Date Here");
-        dateText.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Pattern pattern = Pattern.compile("([0]?[0-9]||1[0-2])/([0]?[0-9]||[1-2][0-9]||3[0-1])/((19|20)\\d\\d)");
-                Matcher matcher = pattern.matcher(dateText.getText());
-                //Get date1
-                if (matcher.matches())
-                {
-                    date = dateText.getText();
-                    getData(date,ticker);
-                    repaint();
-                }
-            }
-        });
-        text.setBounds(50,200, 95,30);
-        b1.setBounds(50,50,95,30);
-        b2.setBounds(50,100,95,30);
-        b3.setBounds(50,150,95,30);
-        dateText.setBounds(50,250,95,30);
-        b1.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
-                mode = "regular";
-                repaint();
-            }
-        });
-        b2.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
-                mode = "log";
-                repaint();
-            }
-        });
-        b3.addActionListener(new ActionListener(){
-            public void actionPerformed(ActionEvent e){
-                mode = "gradient";
-                repaint();
-            }
-        });
-        f.add(b1);
-        f.add(b2);
-        f.add(b3);
-        f.add(text);
-        f.add(dateText);
-        f.setSize(200,400);
-        f.setLayout(null);
-        f.setVisible(true);
     }
     public void getData(String date, String ticker)
     {
@@ -415,20 +355,86 @@ public class StockAnalyzer extends JPanel {
 
     public static void main(String[] args)
     {
-        StockAnalyzer t = new StockAnalyzer();
-        JFrame jf = new JFrame();
-        jf.setTitle("StockAnalyzer");
-        jf.setSize(800,700);
-        jf.setLocation(200,0);
-        t.setBackground(Color.WHITE);
-        jf.setVisible(true);
-        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        jf.add(t);
-        jf.pack();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                StockAnalyzer t = new StockAnalyzer();
+
+                //Create Control Panel
+                JPanel panel = new JPanel();
+                panel.setBackground(Color.WHITE);
+                JButton b1=new JButton("Regular");
+                JButton b2=new JButton("Log");
+                JButton b3=new JButton("Gradiant");
+                JTextField text = new JTextField("Enter Ticker Here");
+                text.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        t.ticker = text.getText();
+                        t.getData(t.date,t.ticker);
+                        t.repaint();
+                    }
+                });
+                JTextField dateText = new JTextField("Enter Start Date Here");
+                dateText.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Pattern pattern = Pattern.compile("([0]?[0-9]||1[0-2])/([0]?[0-9]||[1-2][0-9]||3[0-1])/((19|20)\\d\\d)");
+                        Matcher matcher = pattern.matcher(dateText.getText());
+                        //Get date1
+                        if (matcher.matches())
+                        {
+                            t.date = dateText.getText();
+                            t.getData(t.date,t.ticker);
+                            t.repaint();
+                        }
+                    }
+                });
+                text.setBounds(50,200, 95,30);
+                b1.setBounds(50,50,95,30);
+                b2.setBounds(50,100,95,30);
+                b3.setBounds(50,150,95,30);
+                dateText.setBounds(50,250,95,30);
+                b1.addActionListener(new ActionListener(){
+                    public void actionPerformed(ActionEvent e){
+                        t.mode = "regular";
+                        t.repaint();
+                    }
+                });
+                b2.addActionListener(new ActionListener(){
+                    public void actionPerformed(ActionEvent e){
+                        t.mode = "log";
+                        t.repaint();
+                    }
+                });
+                b3.addActionListener(new ActionListener(){
+                    public void actionPerformed(ActionEvent e){
+                        t.mode = "gradient";
+                        t.repaint();
+                    }
+                });
+                panel.add(b1);
+                panel.add(b2);
+                panel.add(b3);
+                panel.add(text);
+                panel.add(dateText);
+                panel.setPreferredSize(new Dimension(200,400));
+                panel.setLayout(null);
+                panel.setVisible(true);
+
+                JFrame jf = new JFrame();
+                jf.setTitle("StockAnalyzer");
+                jf.setSize(1000,700);
+                jf.setLocation(200,0);
+                t.setBackground(Color.WHITE);
+                jf.setVisible(true);
+                jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                jf.setLayout(new FlowLayout(FlowLayout.LEFT));
+                jf.add(t);
+                jf.add(panel);
+                jf.pack();
+            }
+        });
     }
 
-    @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(800, 700);
-    }
 }
